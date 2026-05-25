@@ -14,8 +14,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend"))); // serve frontend
 
 // ===== MONGODB CONNECTION =====
-mongoose
-  .connect(process.env.MONGO_URI, {
+mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
