@@ -31,7 +31,7 @@ const Contact = mongoose.model("Contact", contactSchema);
 
 // ===== ROUTE =====
 // ✅ React is hitting: http://localhost:5000/contact
-app.post("/contact", async (req, res) => {
+app.post("/appointment", async (req, res) => {
   // ✅ React sends: fullName, phone, email, subject, message
   const { fullName, phone, email, subject, message } = req.body;
 
