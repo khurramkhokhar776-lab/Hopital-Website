@@ -14,12 +14,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend"))); // serve frontend
 
 // ===== MONGODB CONNECTION =====
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB Error:", err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Atlas Connected Successfully"))
+  .catch((err) => console.log("❌ MongoDB Error:", err.message));
 
 // ===== SCHEMA =====
 const contactSchema = new mongoose.Schema({
