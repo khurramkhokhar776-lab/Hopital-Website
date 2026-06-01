@@ -145,7 +145,7 @@ const handleSubmit = async (e) => {
   e.preventDefault();
 
   try {
-    const response = await fetch("https://hopital-website.onrender.com/appointment", {
+    const response = await fetch("http://localhost:5000/contact", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -484,7 +484,7 @@ const handleSubmit = async (e) => {
                   <span className="badge text-bg-primary rounded-pill">Fast Booking</span>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+  <form onSubmit={handleSubmit}>
   <div className="mb-3">
     <label className="form-label">Full Name</label>
 
