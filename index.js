@@ -88,13 +88,12 @@ Message: ${message}
     };
 
     // ✅ SEND EMAIL
-    await transporter.sendMail(mailOptions);
-    console.log("📨 Email sent successfully");
+   await newAppointment.save();
 
-    return res.json({
-      success: true,
-      message: "✅ Email sent & form submitted successfully!",
-    });
+res.status(200).json({
+  success: true,
+  message: "Appointment submitted successfully"
+});
   } catch (err) {
     console.error("❌ Error:", err);
     return res
