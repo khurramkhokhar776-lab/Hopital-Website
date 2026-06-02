@@ -145,7 +145,7 @@ const handleSubmit = async (e) => {
   e.preventDefault();
 
   try {
-    const response = await fetch("https://hopital-website.onrender.com/contact", {
+    const response = await fetch("https://hopital-website.onrender.com/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
