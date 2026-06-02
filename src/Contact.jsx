@@ -25,7 +25,7 @@ const Contact = () => {
 
     try {
 
-      const response = await fetch("https://hopital-website.onrender.com/appointment", {
+      const response = await fetch("https://hopital-website.onrender.com/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
