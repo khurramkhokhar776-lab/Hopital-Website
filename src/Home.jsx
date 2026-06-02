@@ -558,9 +558,9 @@ const handleSubmit = async (e) => {
     ></textarea>
   </div>
 
-  <button type="submit" disabled={loading}>
-  {loading ? "Submitting..." : "Submit"}
-</button>
+  <button type="submit" className="primary-btn w-100">
+    Book Appointment
+  </button>
 </form>
               </div>
             </div>
