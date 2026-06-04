@@ -56,22 +56,32 @@ const newContact = new Contact({
   preferredDate,
   message,
 });
-
-
-    
-
     await newContact.save();
     console.log("✅ Data saved in MongoDB");
 
-    // 📧 Setup transporter
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-      user: "hellolearntechnology@gmail.com", // your gmail
-      pass: "kynxbjykmyvgzuhx", // app password only
+    res.status(200).json({
+  success: true,
+  message: "Form submitted successfully."
+});
 
-},
-    });
+// email baad mein send ho
+transporter.sendMail(mailOptions).catch((err) => {
+  console.log("❌ Email error:", err.message);
+});
+
+    // 📧 Setup transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+  user: "hellolearntechnology@gmail.com", // your gmail
+  pass: "kynxbjykmyvgzuhx", // app password only
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
+});
+
+    
 
     // 📩 Email details
     let mailOptions = {
