@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const path = require("path");
 
@@ -11,14 +11,14 @@ const app = express();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend")));
-
-// ===== RESEND EMAIL =====
-const resend = new Resend(process.env.RESEND_API_KEY);
+app.use(express.static(path.join(__dirname, "../frontend"))); // serve frontend
 
 // ===== MONGODB CONNECTION =====
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.log("❌ MongoDB Error:", err));
 
@@ -33,62 +33,77 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model("Contact", contactSchema);
 
-// ===== APPOINTMENT ROUTE =====
-app.post("/appointment", async (req, res) => {
+// ===== ROUTE =====
+// ✅ React is hitting: http://localhost:5000/contact
+app.post("/contact", async (req, res) => {
+  // ✅ React sends: fullName, phone, department, preferredData, message
   const { fullName, phone, department, preferredDate, message } = req.body;
 
   try {
-    if (!fullName || !phone || !department || !preferredDate || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "Required fields missing.",
-      });
+    // ✅ Basic validation (optional but helpful)
+    if ( !fullName || !phone || !department || !preferredDate || !message) {
+      return res
+        .status(400)
+        .json({ success: false, message: "❌ Required fields missing." });
     }
 
-    const newContact = new Contact({
-      fullName,
-      phone,
-      department,
-      preferredDate,
-      message,
-    });
+    // 🗂️ Save to MongoDB
+
+const newContact = new Contact({
+  fullName,
+  phone,
+  department,
+  preferredDate,
+  message,
+});
+
+
+    
 
     await newContact.save();
     console.log("✅ Data saved in MongoDB");
 
-    res.status(200).json({
-      success: true,
-      message: "Form submitted successfully.",
+    // 📧 Setup transporter
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+      user: "hellolearntechnology@gmail.com", // your gmail
+      pass: "kynxbjykmyvgzuhx", // app password only
+
+},
     });
 
-    resend.emails
-      .send({
-        from: "onboarding@resend.dev",
-        to: "hellolearntechnology@gmail.com",
-        subject: `New Appointment - ${fullName}`,
-        text: `
+    // 📩 Email details
+    let mailOptions = {
+      from: "hellolearntechnology@gmail.com",
+      to: "hellolearntechnology@gmail.com",
+      subject: `📩 New Contact Form Submission - ${fullName}`,
+      text: `
 Name: ${fullName}
 Phone: ${phone}
 Department: ${department}
 Preferred Date: ${preferredDate}
 Message: ${message}
-        `,
-      })
-      .then(() => console.log("📨 Email sent successfully"))
-      .catch((err) => console.log("❌ Email error:", err.message));
+      `,
+    };
+
+    // ✅ SEND EMAIL
+    await transporter.sendMail(mailOptions);
+    console.log("📨 Email sent successfully");
+
+    return res.json({
+      success: true,
+      message: "✅ Email sent & form submitted successfully!",
+    });
   } catch (err) {
     console.error("❌ Error:", err);
-
-    if (!res.headersSent) {
-      return res.status(500).json({
-        success: false,
-        message: "Server error.",
-      });
-    }
+    return res
+      .status(500)
+      .json({ success: false, message: "❌ Error sending message." });
   }
 });
 
-// ===== VIEW DATA =====
+// ===== VIEW + DELETE EMAIL DATA IN TABLE =====
 app.get("/check-emails", async (req, res) => {
   try {
     const data = await Contact.find().sort({ _id: -1 });
@@ -104,8 +119,12 @@ app.get("/check-emails", async (req, res) => {
           <td>${item.message || ""}</td>
           <td>
             <button onclick="deleteRecord('${item._id}')" style="
-              background:#dc3545;color:white;border:none;
-              padding:6px 10px;border-radius:4px;cursor:pointer;
+              background: #dc3545; 
+              color: white; 
+              border: none; 
+              padding: 6px 10px; 
+              border-radius: 4px;
+              cursor: pointer;
             ">Delete</button>
           </td>
         </tr>`
@@ -114,16 +133,41 @@ app.get("/check-emails", async (req, res) => {
 
     const html = `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
-        <title>Submitted Form Data</title>
+        <meta charset="UTF-8">
+        <title>Submitted Email Data</title>
         <style>
-          body { font-family: Arial; background:#f4f6f8; padding:20px; }
-          h1 { text-align:center; }
-          table { width:100%; border-collapse:collapse; background:white; }
-          th, td { border:1px solid #ddd; padding:10px; }
-          th { background:#007bff; color:white; }
-          tr:nth-child(even) { background:#f9f9f9; }
+          body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+          }
+          h1 {
+            text-align: center;
+            color: #333;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+          }
+          th {
+            background: #007bff;
+            color: white;
+          }
+          tr:nth-child(even) {
+            background: #f9f9f9;
+          }
+          button:hover {
+            opacity: 0.8;
+          }
         </style>
       </head>
       <body>
@@ -134,12 +178,14 @@ app.get("/check-emails", async (req, res) => {
               <th>Name</th>
               <th>Phone</th>
               <th>Department</th>
-              <th>Preferred Date</th>
+              <th>PreferredData</th>
               <th>Message</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>${tableRows}</tbody>
+          <tbody>
+            ${tableRows}
+          </tbody>
         </table>
 
         <script>
@@ -162,7 +208,7 @@ app.get("/check-emails", async (req, res) => {
     return res.send(html);
   } catch (err) {
     console.error("❌ Error fetching data:", err);
-    return res.status(500).send("<h2>Error fetching data</h2>");
+    return res.status(500).send("<h2>Error fetching email data</h2>");
   }
 });
 
@@ -180,3 +226,4 @@ app.delete("/delete-email/:id", async (req, res) => {
 // ===== START SERVER =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
