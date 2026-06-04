@@ -228,4 +228,3 @@ app.delete("/delete-email/:id", async (req, res) => {
 // ===== START SERVER =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
