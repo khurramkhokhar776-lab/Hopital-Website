@@ -7,22 +7,16 @@ const path = require("path");
 
 const app = express();
 
-// ===== MIDDLEWARE =====
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend"))); // serve frontend
+app.use(express.static(path.join(__dirname, "../frontend")));
 
-// ===== MONGODB CONNECTION =====
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.log("❌ MongoDB Error:", err));
 
-// ===== SCHEMA =====
 const contactSchema = new mongoose.Schema({
   fullName: String,
   phone: String,
@@ -33,47 +27,38 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model("Contact", contactSchema);
 
-// ===== ROUTE =====
-// ✅ React is hitting: http://localhost:5000/contact
 app.post("/appointment", async (req, res) => {
-  // ✅ React sends: fullName, phone, department, preferredData, message
   const { fullName, phone, department, preferredDate, message } = req.body;
 
   try {
-    // ✅ Basic validation (optional but helpful)
-    if ( !fullName || !phone || !department || !preferredDate || !message) {
-      return res
-        .status(400)
-        .json({ success: false, message: "❌ Required fields missing." });
+    if (!fullName || !phone || !department || !preferredDate || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "❌ Required fields missing.",
+      });
     }
 
-    // 🗂️ Save to MongoDB
-
-const newContact = new Contact({
-  fullName,
-  phone,
-  department,
-  preferredDate,
-  message,
-});
-
-
-    
+    const newContact = new Contact({
+      fullName,
+      phone,
+      department,
+      preferredDate,
+      message,
+    });
 
     await newContact.save();
     console.log("✅ Data saved in MongoDB");
 
-    // 📧 Setup transporter
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
-      user: "hellolearntechnology@gmail.com", // your gmail
-      pass: "kynxbjykmyvgzuhx", // app password only
-
-},
+        user: "hellolearntechnology@gmail.com",
+        pass: "kynxbjykmyvgzuhx",
+      },
     });
 
-    // 📩 Email details
     let mailOptions = {
       from: "hellolearntechnology@gmail.com",
       to: "hellolearntechnology@gmail.com",
@@ -87,7 +72,6 @@ Message: ${message}
       `,
     };
 
-    // ✅ SEND EMAIL
     await transporter.sendMail(mailOptions);
     console.log("📨 Email sent successfully");
 
@@ -97,13 +81,13 @@ Message: ${message}
     });
   } catch (err) {
     console.error("❌ Error:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "❌ Error sending message." });
+    return res.status(500).json({
+      success: false,
+      message: "❌ Error sending message.",
+    });
   }
 });
 
-// ===== VIEW + DELETE EMAIL DATA IN TABLE =====
 app.get("/check-emails", async (req, res) => {
   try {
     const data = await Contact.find().sort({ _id: -1 });
@@ -118,101 +102,42 @@ app.get("/check-emails", async (req, res) => {
           <td>${item.preferredDate || ""}</td>
           <td>${item.message || ""}</td>
           <td>
-            <button onclick="deleteRecord('${item._id}')" style="
-              background: #dc3545; 
-              color: white; 
-              border: none; 
-              padding: 6px 10px; 
-              border-radius: 4px;
-              cursor: pointer;
-            ">Delete</button>
+            <button onclick="deleteRecord('${item._id}')">Delete</button>
           </td>
         </tr>`
       )
       .join("");
 
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <title>Submitted Email Data</title>
-        <style>
-          body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-          }
-          h1 {
-            text-align: center;
-            color: #333;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-          }
-          th, td {
-            border: 1px solid #ddd;
-            padding: 10px 12px;
-            text-align: left;
-          }
-          th {
-            background: #007bff;
-            color: white;
-          }
-          tr:nth-child(even) {
-            background: #f9f9f9;
-          }
-          button:hover {
-            opacity: 0.8;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>📬 Submitted Form Data</h1>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Department</th>
-              <th>PreferredData</th>
-              <th>Message</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
+    return res.send(`
+      <h1>📬 Submitted Form Data</h1>
+      <table border="1" cellpadding="10">
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Department</th>
+          <th>Preferred Date</th>
+          <th>Message</th>
+          <th>Action</th>
+        </tr>
+        ${tableRows}
+      </table>
 
-        <script>
-          async function deleteRecord(id) {
-            if (confirm("Are you sure you want to delete this record?")) {
-              const res = await fetch('/delete-email/' + id, { method: 'DELETE' });
-              if (res.ok) {
-                alert("Record deleted successfully!");
-                window.location.reload();
-              } else {
-                alert("Failed to delete record.");
-              }
-            }
+      <script>
+        async function deleteRecord(id) {
+          if (confirm("Are you sure?")) {
+            const res = await fetch('/delete-email/' + id, { method: 'DELETE' });
+            if (res.ok) window.location.reload();
+            else alert("Failed to delete record.");
           }
-        </script>
-      </body>
-      </html>
-    `;
-
-    return res.send(html);
+        }
+      </script>
+    `);
   } catch (err) {
     console.error("❌ Error fetching data:", err);
-    return res.status(500).send("<h2>Error fetching email data</h2>");
+    return res.status(500).send("<h2>Error fetching data</h2>");
   }
 });
 
-// ===== DELETE ROUTE =====
 app.delete("/delete-email/:id", async (req, res) => {
   try {
     await Contact.findByIdAndDelete(req.params.id);
@@ -223,7 +148,5 @@ app.delete("/delete-email/:id", async (req, res) => {
   }
 });
 
-// ===== START SERVER =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
