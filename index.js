@@ -21,15 +21,19 @@ mongoose
 
 // ===== EMAIL TRANSPORTER =====
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: "hellolearntechnology@gmail.com",
     pass: "kynxbjykmyvgzuhx", // app password only
   },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
 });
+
+
 
 // ===== SCHEMA =====
 const contactSchema = new mongoose.Schema({
