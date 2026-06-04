@@ -64,8 +64,10 @@ const newContact = new Contact({
     console.log("✅ Data saved in MongoDB");
 
     // 📧 Setup transporter
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
       user: "hellolearntechnology@gmail.com", // your gmail
       pass: "kynxbjykmyvgzuhx", // app password only
