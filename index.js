@@ -66,8 +66,8 @@ const newContact = new Contact({
     // 📧 Setup transporter
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
       user: "hellolearntechnology@gmail.com", // your gmail
       pass: "kynxbjykmyvgzuhx", // app password only
