@@ -71,6 +71,9 @@ const newContact = new Contact({
       pass: "kynxbjykmyvgzuhx", // app password only
 
 },
+      connectionTimeout: 10000,
+      greetingTimeout:  10000,
+      socketTimeout:    10000,
     });
 
     // 📩 Email details
