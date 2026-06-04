@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const mongoose = require("mongoose");
 const path = require("path");
 
@@ -13,27 +13,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 
+// ===== RESEND EMAIL =====
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 // ===== MONGODB CONNECTION =====
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => console.log("❌ MongoDB Error:", err));
-
-// ===== EMAIL TRANSPORTER =====
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "hellolearntechnology@gmail.com",
-    pass: "kynxbjykmyvgzuhx", // app password only
-  },
-  connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-});
-
-
 
 // ===== SCHEMA =====
 const contactSchema = new mongoose.Schema({
@@ -74,21 +61,19 @@ app.post("/appointment", async (req, res) => {
       message: "Form submitted successfully.",
     });
 
-    const mailOptions = {
-      from: "hellolearntechnology@gmail.com",
-      to: "hellolearntechnology@gmail.com",
-      subject: `📩 New Contact Form Submission - ${fullName}`,
-      text: `
+    resend.emails
+      .send({
+        from: "onboarding@resend.dev",
+        to: "hellolearntechnology@gmail.com",
+        subject: `New Appointment - ${fullName}`,
+        text: `
 Name: ${fullName}
 Phone: ${phone}
 Department: ${department}
 Preferred Date: ${preferredDate}
 Message: ${message}
-      `,
-    };
-
-    transporter
-      .sendMail(mailOptions)
+        `,
+      })
       .then(() => console.log("📨 Email sent successfully"))
       .catch((err) => console.log("❌ Email error:", err.message));
   } catch (err) {
@@ -195,9 +180,3 @@ app.delete("/delete-email/:id", async (req, res) => {
 // ===== START SERVER =====
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-
-
-
-
-
