@@ -65,16 +65,15 @@ const newContact = new Contact({
 
     // 📧 Setup transporter
     let transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-      user: "hellolearntechnology@gmail.com", // your gmail
-      pass: "kynxbjykmyvgzuhx", // app password only
-
-},
-      connectionTimeout: 10000,
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 10000,
-    });
+});
 
 
     // 📩 Email details
