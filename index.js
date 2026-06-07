@@ -78,20 +78,31 @@ app.post("/appointment", async (req, res) => {
   }
 });
 
-// ===== VIEW DATA =====
-app.get("/check-emails", async (req, res) => {
+// ===== SMALL SECURITY/HTML HELPER =====
+function safe(value) {
+  if (!value) return "";
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// ===== FUNCTION TO SHOW DATA =====
+async function showSubmittedData(req, res) {
   try {
-    const data = await Contact.find().sort({ _id: -1 });
+    const data = await Contact.find().sort({ createdAt: -1 });
 
     let tableRows = data
       .map(
         (item) => `
         <tr>
-          <td>${item.fullName || ""}</td>
-          <td>${item.phone || ""}</td>
-          <td>${item.department || ""}</td>
-          <td>${item.preferredDate || ""}</td>
-          <td>${item.message || ""}</td>
+          <td>${safe(item.fullName)}</td>
+          <td>${safe(item.phone)}</td>
+          <td>${safe(item.department)}</td>
+          <td>${safe(item.preferredDate)}</td>
+          <td>${safe(item.message)}</td>
           <td>${item.createdAt ? new Date(item.createdAt).toLocaleString() : ""}</td>
           <td>
             <button onclick="deleteRecord('${item._id}')" style="
@@ -122,6 +133,13 @@ app.get("/check-emails", async (req, res) => {
             text-align: center;
             color: #222;
           }
+          .top-box {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.08);
+          }
           table {
             width: 100%;
             border-collapse: collapse;
@@ -132,6 +150,7 @@ app.get("/check-emails", async (req, res) => {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
+            vertical-align: top;
           }
           th {
             background: #007bff;
@@ -140,10 +159,22 @@ app.get("/check-emails", async (req, res) => {
           tr:nth-child(even) {
             background: #f9f9f9;
           }
+          .count {
+            font-weight: bold;
+            color: #007bff;
+          }
         </style>
       </head>
       <body>
         <h1>Submitted Form Data</h1>
+
+        <div class="top-box">
+          Total Records: <span class="count">${data.length}</span>
+          <br>
+          Backend Status: ✅ Active
+          <br>
+          Email Status: Disabled
+        </div>
 
         <table>
           <thead>
@@ -185,10 +216,34 @@ app.get("/check-emails", async (req, res) => {
     console.error("❌ Error fetching data:", err);
     return res.status(500).send("<h2>Error fetching data</h2>");
   }
-});
+}
+
+// ===== VIEW DATA ROUTES =====
+// Dono routes work karenge
+app.get("/check-emails", showSubmittedData);
+app.get("/check-mails", showSubmittedData);
 
 // ===== DELETE ROUTE =====
 app.delete("/delete-email/:id", async (req, res) => {
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Record deleted successfully.",
+    });
+  } catch (err) {
+    console.error("❌ Error deleting record:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete record.",
+    });
+  }
+});
+
+// Optional same delete route with different name
+app.delete("/delete-mail/:id", async (req, res) => {
   try {
     await Contact.findByIdAndDelete(req.params.id);
 
@@ -213,4 +268,3 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log("✅ FINAL VERSION ACTIVE: Gmail/Nodemailer removed completely.");
 });
-
