@@ -186,7 +186,8 @@ const handleSubmit = async (e) => {
           --muted: #6c757d;
         }
 
-        body {
+        html, body {
+          overflow-x:hidden;
           font-family: Inter, Arial, Helvetica, sans-serif;
           background: #ffffff;
           color: #14213d;
